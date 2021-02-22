@@ -1,78 +1,44 @@
-version: '3.5'
+# Версия docker-compose
+version: '3'
+# Список наших сервисов (контейнеров)
 services:
-  web:
-    container_name: web
-    image: chrishsieh/nginx-proxy:latest
-    environment:
-      - DEFAULT_HOST=${_DEFAULT_HOST:-myapp.localtest.me}
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-      - dhparam-volume:/etc/nginx/dhparam/
-      - ./setting/nginx/vhost.d/:/etc/nginx/vhost.d:ro
-      - ./setting/nginx/stream.d/:/etc/nginx/stream.d
-      - ./setting/nginx/proxy.conf:/etc/nginx/proxy.conf:ro
-      - ./setting/nginx/nginx.tmpl:/app/nginx.tmpl:ro
-      - ${_CERTS_FOLDER:-./keys}/acme:/acmecerts                #acme.sh install folder
-      - ${_CERTS_FOLDER:-./keys}/certs:/etc/nginx/certs         #certs folder
-      - ./setting/nginx/updatessl.sh:/app/prechk
-      - ${_LOG_FOLDER:-./log}/nginx:/var/log/nginx              #log
-    restart: always
-    secrets:
-      - dns_api
-      - ssl
-    networks:
-      default:
-        #### setting for services call web server by host name
-        aliases:
-          - ${_VIRTUAL_HOST:-myapp.localtest.me}
+    nginx:
+        # используем последний стабильный образ nginx
+        image: nginx:latest
+        # маршрутизируем порты
+        ports:
+            - "80:80"
+            - "443:443"
+        # монтируем директории, слева директории на основной машине, справа - куда они монтируются в контейнере
+        volumes:
+            - ./hosts:/etc/nginx/conf.d
+            - ./www:/var/www
+            - ./logs/nginx:/var/log/nginx
+        # nginx должен общаться с php контейнером
+        links:
+            - php
+    php:
+        # у нас свой образ для PHP, указываем путь к нему и говорим что его надо собрать
+        build: ./images/php
+        # этот образ будет общаться с mysql
+        links:
+            - mysql
+        # монтируем директорию с проектами
+        volumes:
+            - ./www:/var/www
+    mysql:
+        image: mysql
+        ports:
+            - "3306:3306"
+        volumes:
+         - /etc/mysql:/etc/mysql
+         - ./logs/mysql:/var/log/mysql
+         - ./mysql:/var/lib/mysql
+         - ./mysql-files:/var/lib/mysql-files
+         - ./data:/docker-entrypoint-initdb.d
+        # задаем пароль для root пользователя
+        # заливку дампа сайта и создание пользователя для доступа к базе снаружи будем делать позже 
+        environment:
+            MYSQL_ROOT_PASSWORD: password
+            MYSQL_DATABASE: sait
 
-  db:
-    container_name: db
-    image: chrishsieh/mysql:latest
-    volumes:
-      - db-volume:/var/lib/mysql
-      - ./setting/sql/pre-init/:/scripts/pre-init.d/
-    secrets:
-      - crm_secrets
-
-  php:
-    container_name: php
-    image: chrishsieh/php-fpm:alpine-latest
-    links:
-      - db
-    environment:
-      - MYSQL_DB_HOST=db
-      - LC_ALL=${_ALPINE_LC_ALL:-en_US}
-      ##### RELEASE_VERSION avaiable value: latest, 3.1.0
-      - RELEASE_VERSION=${_CRM_VERSION:-latest}
-      - VIRTUAL_HOST=${_VIRTUAL_HOST:-myapp.localtest.me}
-      - VIRTUAL_PROTO=fastcgi
-      - VIRTUAL_ROOT=/var/www/CRM/churchcrm
-      - VIRTUAL_PORT=9000
-      - ENABLE_ACME=${_ENABLE_ACME:-false}                  ##### letsencrypt setting
-      - ENABLE_HSTS=${_ENABLE_HSTS:-false}
-    volumes:
-      - default-volume:/var/www
-      - php-volume:/var/www/CRM/churchcrm                   ##### php code
-      - ./setting/php/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
-      - ./setting/php/crmsetup:/run.d/10-setup.sh
-      - ${_LOG_FOLDER:-./log}/php:/usr/local/var/log        #### log
-    secrets:
-      - crm_secrets
-
-secrets:
-  crm_secrets:
-    file: ${_CRM_SRCRETS:-./secrets/crm_sql_secrets.json}
-  dns_api:
-    file: ${_DNS_API_SRCRETS:-./secrets/dns_api.json}
-  ssl:
-    file: ${_SSL_SRCRETS:-./secrets/ssl.json}
-
-volumes:
-  db-volume:
-  dhparam-volume:
-  default-volume:
-  php-volume:
