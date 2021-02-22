@@ -40,6 +40,9 @@ services:
         tty: true
         ports:
           - "3306:3306"
+        volumes:
+         - ./logs/mysql:/var/log/mysql
+            
         environment:
           MYSQL_DATABASE: database
           MYSQL_ROOT_PASSWORD: your_mysql_root_password
