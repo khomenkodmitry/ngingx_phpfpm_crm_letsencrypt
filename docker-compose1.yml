@@ -17,9 +17,6 @@ services:
         # nginx должен общаться с php контейнером
         links:
             - php
-        networks:
-            - app-network
-
     php:
         # у нас свой образ для PHP, указываем путь к нему и говорим что его надо собрать
         build: ./images/php
@@ -29,27 +26,19 @@ services:
         # монтируем директорию с проектами
         volumes:
             - ./www:/var/www
-        networks:
-            - app-network
-     
-#MySQL Service
     mysql:
-        image: mysql:5.7.22
-        container_name: db
-        restart: unless-stopped
-        tty: true
+        image: mysql
         ports:
-          - "3306:3306"
+            - "3306:3306"
+        volumes:
+         - /etc/mysql:/etc/mysql
+         - ./logs/mysql:/var/log/mysql
+         - ./mysql:/var/lib/mysql
+         - ./mysql-files:/var/lib/mysql-files
+         - ./data:/docker-entrypoint-initdb.d
+        # задаем пароль для root пользователя
+        # заливку дампа сайта и создание пользователя для доступа к базе снаружи будем делать позже 
         environment:
-          MYSQL_DATABASE: database
-          MYSQL_ROOT_PASSWORD: your_mysql_root_password
-          SERVICE_TAGS: dev
-          SERVICE_NAME: mysql
-        networks:
-           - app-network
-
-#Docker Networks
-networks:
-  app-network:
-    driver: bridge
+            MYSQL_ROOT_PASSWORD: password
+            MYSQL_DATABASE: sait
 

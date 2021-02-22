@@ -1,5 +1,0 @@
-192.168.1.22 - - [22/Feb/2021:10:57:53 +0000] "GET / HTTP/1.1" 404 153 "-" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:85.0) Gecko/20100101 Firefox/85.0"
-192.168.1.22 - - [22/Feb/2021:11:08:55 +0000] "GET / HTTP/1.1" 404 153 "-" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:85.0) Gecko/20100101 Firefox/85.0"
-192.168.1.22 - - [22/Feb/2021:11:10:08 +0000] "GET / HTTP/1.1" 404 153 "-" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:85.0) Gecko/20100101 Firefox/85.0"
-192.168.1.22 - - [22/Feb/2021:11:15:49 +0000] "GET / HTTP/1.1" 404 153 "-" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:85.0) Gecko/20100101 Firefox/85.0"
-192.168.1.22 - - [22/Feb/2021:11:19:21 +0000] "GET / HTTP/1.1" 200 78882 "-" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:85.0) Gecko/20100101 Firefox/85.0"
